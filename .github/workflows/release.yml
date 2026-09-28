@@ -1,0 +1,129 @@
+name: Build DMG
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+env:
+  DEVELOPER_DIR: /Library/Developer/CommandLineTools
+
+jobs:
+  reproduce:
+    runs-on: xcode-27
+    timeout-minutes: 20
+    strategy:
+      matrix:
+        copy: [1, 2]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+      - name: Check clean builds and release verification
+        run: python3 scripts/test-reproducible.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: reproduction-${{ matrix.copy }}
+          path: dist/reproducible/*.zip
+          if-no-files-found: error
+          compression-level: 0
+  build:
+    needs: reproduce
+    runs-on: xcode-27
+    timeout-minutes: 30
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          submodules: recursive
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+      - name: Check version
+        if: github.event_name == 'push'
+        run: |
+          VERSION=$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' macos/Info.plist)
+          test "$GITHUB_REF_NAME" = "v$VERSION"
+      - name: Test
+        run: bash scripts/test-macos.sh
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: reproduction-*
+          path: dist/independent
+      - name: Compare independent runners
+        run: cmp dist/independent/reproduction-1/*.zip dist/independent/reproduction-2/*.zip
+      - name: Set up signing (optional)
+        env:
+          CERTIFICATE_P12: ${{ secrets.CERTIFICATE_P12 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          if [[ -z "$CERTIFICATE_P12$CERTIFICATE_PASSWORD$APPLE_ID$APPLE_APP_PASSWORD$APPLE_TEAM_ID" ]]; then
+            echo "No signing credentials configured; building an unnotarized DMG."
+            exit 0
+          fi
+          : "${CERTIFICATE_P12:?Missing certificate}" "${APPLE_ID:?Missing Apple ID}"
+          : "${APPLE_APP_PASSWORD:?Missing app-specific password}" "${APPLE_TEAM_ID:?Missing team ID}"
+          KEYCHAIN="$RUNNER_TEMP/input-selector.keychain-db"
+          KEYCHAIN_PASSWORD=$(uuidgen)
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          printf '%s' "$CERTIFICATE_P12" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+          security import "$RUNNER_TEMP/certificate.p12" -k "$KEYCHAIN" -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
+          rm "$RUNNER_TEMP/certificate.p12"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN" >/dev/null
+          security list-keychains -d user -s "$KEYCHAIN" "$HOME/Library/Keychains/login.keychain-db"
+          IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN" | awk '/Developer ID Application/ {print $2; exit}')
+          test -n "$IDENTITY"
+          xcrun notarytool store-credentials input-selector --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" --password "$APPLE_APP_PASSWORD" --keychain "$KEYCHAIN"
+          echo "CODE_SIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
+          echo "NOTARY_KEYCHAIN_PROFILE=input-selector" >> "$GITHUB_ENV"
+          echo "NOTARY_KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
+      - name: Build DMG
+        run: bash scripts/build-dmg.sh
+      - name: Check release build matches independent runners
+        run: cmp dist/reproducible/*.zip dist/independent/reproduction-1/*.zip
+      - uses: actions/upload-artifact@v7
+        with:
+          name: Input-Selector-arm64
+          path: |
+            dist/*.dmg
+            dist/*.sha256
+            dist/reproducible/*.zip
+            dist/reproducible/*.sha256
+            dist/reproducible/build-info.json
+          if-no-files-found: error
+          compression-level: 0
+      - name: Create draft release
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo 'Download the DMG, open it, and drag Input Selector into Applications. Requires Apple Silicon and macOS 13 or later.' > "$RUNNER_TEMP/release-notes.md"
+          printf '\nTo verify this build, use the unsigned ZIP and the commands under Reproducible builds in README.md.\n' >> "$RUNNER_TEMP/release-notes.md"
+          if [[ -z "${NOTARY_KEYCHAIN_PROFILE:-}" ]]; then
+            printf '\nThis build is not notarized. On first launch, macOS may require approval in System Settings → Privacy & Security → Open Anyway.\n' >> "$RUNNER_TEMP/release-notes.md"
+          fi
+          gh release create "$GITHUB_REF_NAME" dist/*.dmg dist/*.sha256 \
+            dist/reproducible/*.zip dist/reproducible/*.sha256 dist/reproducible/build-info.json --verify-tag --draft \
+            --title "Input Selector ${GITHUB_REF_NAME#v}" --notes-file "$RUNNER_TEMP/release-notes.md"
+      - name: Remove signing credentials
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/certificate.p12"
+          if [[ -f "$RUNNER_TEMP/input-selector.keychain-db" ]]; then
+            security delete-keychain "$RUNNER_TEMP/input-selector.keychain-db"
+          fi

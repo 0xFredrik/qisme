@@ -1,0 +1,44 @@
+{
+  "architecture": "arm64",
+  "clang": "Apple clang version 21.0.0 (clang-2100.3.34.2)",
+  "linker": {
+    "architectures": [
+      "armv6",
+      "armv7",
+      "armv7s",
+      "arm64",
+      "arm64e",
+      "arm64_32",
+      "i386",
+      "x86_64",
+      "x86_64h",
+      "armv6m",
+      "armv7k",
+      "armv7m",
+      "armv7em",
+      "armv8m.main",
+      "armv8.1m.main"
+    ],
+    "lto": {
+      "runtime_api_version": 30,
+      "static_api_version": 30,
+      "version_string": "LLVM version 21.0.0"
+    },
+    "tapi": {
+      "version": "21.0.0",
+      "version_string": "Apple TAPI version 21.0.0 (tapi-2100.3.8.1)"
+    },
+    "version": "27037.1"
+  },
+  "macos_build": "26A428",
+  "sdk_build": "26A425",
+  "sdk_settings_sha256": "7b93ad7e534cc4b31c6a4e39d19b5e0288acf2168c2649479a796d1cb51939fb",
+  "sdk_version": "27.0",
+  "swift": "Apple Swift version 6.4 (swiftlang-6.4.0.34.1 clang-2100.3.34.1)",
+  "tools_sha256": {
+    "clang": "1590ac950a3d627817d09ade5cb60b2115f17a72182a3141e010b4bcc482a0c9",
+    "ld": "374d9f0713bce2c8a9e1e82bde51615d5433516a10d99b63107eb6ee70542e4c",
+    "swift-frontend": "cf81104bf554eef05e28a8bb5285c763f1323b4511b944d755d8bdd6cb8db717",
+    "swiftc": "cf81104bf554eef05e28a8bb5285c763f1323b4511b944d755d8bdd6cb8db717"
+  }
+}
