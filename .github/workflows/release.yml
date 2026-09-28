@@ -114,7 +114,7 @@ jobs:
         run: |
           gh release create "$GITHUB_REF_NAME" dist/*.dmg dist/*.sha256 \
             dist/reproducible/*.zip dist/reproducible/*.sha256 dist/reproducible/build-info.json --verify-tag --draft \
-            --title "qisme ${GITHUB_REF_NAME#v}" --notes-file "$RUNNER_TEMP/release-notes.md"
+            --title "qisme ${GITHUB_REF_NAME#v}" --notes "Download the DMG, open it, and drag qisme into Applications."
       - name: Remove signing credentials
         if: always()
         run: |
