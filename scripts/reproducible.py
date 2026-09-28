@@ -115,7 +115,7 @@ def build(destination):
     destination.mkdir(parents=True, exist_ok=True)
     source_hashes = {p.relative_to(ROOT).as_posix(): digest(p) for p in source_files()}
     sdk = output("xcrun", "--sdk", "macosx", "--show-sdk-path")
-    with tempfile.TemporaryDirectory(prefix="input-selector-build-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="qisme-build-") as temporary:
         working = Path(temporary)
         app = working / APP_NAME
         for folder in ("MacOS", "Helpers", "Resources"):
@@ -157,7 +157,7 @@ def build(destination):
             raise ValueError("Source files changed during the build; run it again.")
         info = {"format": 1, "toolchain": tools, "sources": source_hashes, "files": contents(app)}
         version = plistlib.loads((app / "Contents/Info.plist").read_bytes())["CFBundleShortVersionString"]
-        name = f"Input-Selector-{version}-arm64-reproducible.zip"
+        name = f"qisme-{version}-arm64-reproducible.zip"
         archive(app, info, destination / name)
         (destination / (name + ".sha256")).write_text(f"{digest(destination / name)}  {name}\n")
         (destination / "build-info.json").write_bytes(json_bytes(info))
@@ -175,7 +175,7 @@ def verify_app(release, expected):
         raise ValueError("The app must not be a symlink.")
     contents(release)  # Reject symlinks and special files before copying.
     run(["codesign", "--verify", "--deep", "--strict", release])
-    with tempfile.TemporaryDirectory(prefix="input-selector-verify-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="qisme-verify-") as temporary:
         copied = Path(temporary) / APP_NAME
         shutil.copytree(release, copied)
         for binary in sorted(EXECUTABLES):
@@ -200,7 +200,7 @@ def verify(release, expected):
     if release.suffix.lower() != ".dmg":
         verify_app(release, expected)
         return
-    with tempfile.TemporaryDirectory(prefix="input-selector-mount-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="qisme-mount-") as temporary:
         mount = Path(temporary) / "volume"
         mount.mkdir()
         run(["hdiutil", "attach", "-readonly", "-nobrowse", "-mountpoint", mount, release],

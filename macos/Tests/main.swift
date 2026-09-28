@@ -14,7 +14,7 @@ let dellID = "11111111-2222-3333-4444-555555555555"
 let otherID = "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE"
 let listing = "[1] Example Display (\(otherID))\n[2] DELL U5226KW (\(dellID))\n"
 let caps = "(prot(monitor)cmds(01 02 60)vcp(10 14(01 04) 60(0f 10 11 12 1b) D6(01 04)))"
-let suiteName = "local.input-selector.tests.\(UUID().uuidString)"
+let suiteName = "local.qisme.tests.\(UUID().uuidString)"
 let defaults = UserDefaults(suiteName: suiteName)!
 defer { defaults.removePersistentDomain(forName: suiteName) }
 let settings = InputSettings(defaults: defaults)

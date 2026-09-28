@@ -57,7 +57,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private let menu = NSMenu()
     private var inputItems: [MonitorInput: NSMenuItem] = [:]
     private var actions: [Int: MonitorInput] = [:]
-    private let worker = DispatchQueue(label: "local.input-selector.ddc", qos: .userInitiated)
+    private let worker = DispatchQueue(label: "local.qisme.ddc", qos: .userInitiated)
     private var monitors: [MonitorSnapshot] = []
     private var switching = false
     private var refreshing = false

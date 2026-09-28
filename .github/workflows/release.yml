@@ -75,7 +75,7 @@ jobs:
           fi
           : "${CERTIFICATE_P12:?Missing certificate}" "${APPLE_ID:?Missing Apple ID}"
           : "${APPLE_APP_PASSWORD:?Missing app-specific password}" "${APPLE_TEAM_ID:?Missing team ID}"
-          KEYCHAIN="$RUNNER_TEMP/input-selector.keychain-db"
+          KEYCHAIN="$RUNNER_TEMP/qisme.keychain-db"
           KEYCHAIN_PASSWORD=$(uuidgen)
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
           security set-keychain-settings -lut 21600 "$KEYCHAIN"
@@ -87,10 +87,10 @@ jobs:
           security list-keychains -d user -s "$KEYCHAIN" "$HOME/Library/Keychains/login.keychain-db"
           IDENTITY=$(security find-identity -v -p codesigning "$KEYCHAIN" | awk '/Developer ID Application/ {print $2; exit}')
           test -n "$IDENTITY"
-          xcrun notarytool store-credentials input-selector --apple-id "$APPLE_ID" \
+          xcrun notarytool store-credentials qisme --apple-id "$APPLE_ID" \
             --team-id "$APPLE_TEAM_ID" --password "$APPLE_APP_PASSWORD" --keychain "$KEYCHAIN"
           echo "CODE_SIGN_IDENTITY=$IDENTITY" >> "$GITHUB_ENV"
-          echo "NOTARY_KEYCHAIN_PROFILE=input-selector" >> "$GITHUB_ENV"
+          echo "NOTARY_KEYCHAIN_PROFILE=qisme" >> "$GITHUB_ENV"
           echo "NOTARY_KEYCHAIN=$KEYCHAIN" >> "$GITHUB_ENV"
       - name: Build DMG
         run: bash scripts/build-dmg.sh
@@ -98,7 +98,7 @@ jobs:
         run: cmp dist/reproducible/*.zip dist/independent/reproduction-1/*.zip
       - uses: actions/upload-artifact@v7
         with:
-          name: Input-Selector-arm64
+          name: qisme-arm64
           path: |
             dist/*.dmg
             dist/*.sha256
@@ -112,18 +112,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          echo 'Download the DMG, open it, and drag Input Selector into Applications. Requires Apple Silicon and macOS 13 or later.' > "$RUNNER_TEMP/release-notes.md"
-          printf '\nTo verify this build, use the unsigned ZIP and the commands under Reproducible builds in README.md.\n' >> "$RUNNER_TEMP/release-notes.md"
-          if [[ -z "${NOTARY_KEYCHAIN_PROFILE:-}" ]]; then
-            printf '\nThis build is not notarized. On first launch, macOS may require approval in System Settings → Privacy & Security → Open Anyway.\n' >> "$RUNNER_TEMP/release-notes.md"
-          fi
           gh release create "$GITHUB_REF_NAME" dist/*.dmg dist/*.sha256 \
             dist/reproducible/*.zip dist/reproducible/*.sha256 dist/reproducible/build-info.json --verify-tag --draft \
-            --title "Input Selector ${GITHUB_REF_NAME#v}" --notes-file "$RUNNER_TEMP/release-notes.md"
+            --title "qisme ${GITHUB_REF_NAME#v}" --notes-file "$RUNNER_TEMP/release-notes.md"
       - name: Remove signing credentials
         if: always()
         run: |
           rm -f "$RUNNER_TEMP/certificate.p12"
-          if [[ -f "$RUNNER_TEMP/input-selector.keychain-db" ]]; then
-            security delete-keychain "$RUNNER_TEMP/input-selector.keychain-db"
+          if [[ -f "$RUNNER_TEMP/qisme.keychain-db" ]]; then
+            security delete-keychain "$RUNNER_TEMP/qisme.keychain-db"
           fi

@@ -26,7 +26,7 @@ def must_reject(app, expected):
     raise AssertionError("Modified release incorrectly passed verification")
 
 
-with tempfile.TemporaryDirectory(prefix="input-selector-repro-test-") as temporary:
+with tempfile.TemporaryDirectory(prefix="qisme-repro-test-") as temporary:
     base = Path(temporary)
     archives = []
     for index, name in enumerate(("first", "a different checkout with spaces")):
