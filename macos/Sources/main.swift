@@ -27,7 +27,7 @@ if !arguments.isEmpty && arguments != ["--preferences"] {
         case ["--login-status"]:
             print("Login item status: \(SMAppService.mainApp.status.rawValue) (0=not registered, 1=enabled, 2=requires approval, 3=not found)")
         case ["--help"]:
-            print("Input Selector — automatically detects external monitors.\n--list         List monitors\n--status       Read monitors and inputs (also --dry-run)\n--login-status Read login registration\n--preferences Open Preferences\n--switch       Switch a single connected monitor to DP1\n--switch UUID HEX  Switch a specific monitor to an advertised/configured input")
+            print("qisme — automatically detects external monitors.\n--list         List monitors\n--status       Read monitors and inputs (also --dry-run)\n--login-status Read login registration\n--preferences Open Preferences\n--switch       Switch a single connected monitor to DP1\n--switch UUID HEX  Switch a specific monitor to an advertised/configured input")
         default:
             guard arguments.first == "--switch" else { throw SwitchError(message: "Unknown arguments. Use --help.") }
             let monitors = try switcher.snapshots()
@@ -76,9 +76,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         shortcuts.onTrigger = { [weak self] input in self?.switchInput(input) }
         shortcuts.onChange = { [weak self] in self?.updateRows() }
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        statusItem.button?.image = NSImage(systemSymbolName: "display", accessibilityDescription: "Input Selector")
+        statusItem.button?.image = NSImage(systemSymbolName: "display", accessibilityDescription: "qisme")
         statusItem.button?.image?.isTemplate = true
-        statusItem.button?.toolTip = "Input Selector"
+        statusItem.button?.toolTip = "qisme"
         menu.autoenablesItems = false; menu.delegate = self
         rebuildMenu()
         statusItem.menu = menu
@@ -116,7 +116,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         }
         menu.addItem(.separator())
         addItem("Preferences…", action: #selector(showPreferences), key: ",")
-        addItem("Quit Input Selector", action: #selector(quit), key: "q")
+        addItem("Quit qisme", action: #selector(quit), key: "q")
         updateRows()
     }
     private func addHeader(_ title: String) {

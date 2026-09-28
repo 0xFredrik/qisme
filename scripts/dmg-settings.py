@@ -1,7 +1,7 @@
 from pathlib import Path
 
 root = Path.cwd()  # build-dmg.sh runs from the repository root.
-app = root / "dist" / "Input Selector.app"
+app = root / "dist" / "qisme.app"
 
 format = "UDZO"
 files = [str(app)]

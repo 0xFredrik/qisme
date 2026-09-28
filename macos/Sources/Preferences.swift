@@ -23,7 +23,7 @@ final class PreferencesController: NSWindowController, NSWindowDelegate, NSTextF
         self.shortcuts = shortcuts; self.monitors = monitors; self.settings = settings
         let window = NSWindow(contentRect: NSRect(x: 0, y: 0, width: 450, height: 380),
                               styleMask: [.titled, .closable], backing: .buffered, defer: false)
-        window.title = "Input Selector"
+        window.title = "qisme"
         window.isReleasedWhenClosed = false
         super.init(window: window)
         window.delegate = self

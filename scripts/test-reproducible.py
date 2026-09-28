@@ -52,7 +52,7 @@ with tempfile.TemporaryDirectory(prefix="qisme-repro-test-") as temporary:
     shutil.copytree(expected, candidate)
     sign(candidate)
     verify_app(candidate, expected)
-    run([candidate / "Contents/MacOS/InputSelector", "--help"], capture_output=True)
+    run([candidate / "Contents/MacOS/qisme", "--help"], capture_output=True)
     run([candidate / "Contents/Helpers/m1ddc"], capture_output=True)
     run([candidate / "Contents/Helpers/display-discovery", "--help"], capture_output=True)
     print("PASS: signed app and helpers launch successfully without monitor commands")

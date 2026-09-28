@@ -23,8 +23,8 @@ for scale in [1, 2] {
         let bounds = text.size(withAttributes: attributes)
         text.draw(at: NSPoint(x: (CGFloat(width) - bounds.width) / 2, y: y), withAttributes: attributes)
     }
-    centered("Input Selector", y: 290, size: 25, weight: .semibold, shade: 0.12)
-    centered("Drag Input Selector to Applications", y: 48, size: 15, weight: .regular, shade: 0.35)
+    centered("qisme", y: 290, size: 25, weight: .semibold, shade: 0.12)
+    centered("Drag qisme to Applications", y: 48, size: 15, weight: .regular, shade: 0.35)
 
     NSColor(calibratedWhite: 0.55, alpha: 1).setStroke()
     let arrow = NSBezierPath()

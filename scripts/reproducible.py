@@ -16,8 +16,8 @@ import zipfile
 from prepare_m1ddc import prepare, upstream_files
 
 ROOT = Path(__file__).resolve().parent.parent
-APP_NAME = "Input Selector.app"
-EXECUTABLES = {"Contents/MacOS/InputSelector", "Contents/Helpers/m1ddc", "Contents/Helpers/display-discovery"}
+APP_NAME = "qisme.app"
+EXECUTABLES = {"Contents/MacOS/qisme", "Contents/Helpers/m1ddc", "Contents/Helpers/display-discovery"}
 LOCK = ROOT / "macos/toolchain.json"
 
 
@@ -142,9 +142,9 @@ def build(destination):
              "-framework", "CoreDisplay", "-o", app / "Contents/Helpers/display-discovery"], cwd=ROOT)
         run(["xcrun", "swiftc", "-O", "-swift-version", "5", "-target", "arm64-apple-macosx13.0",
              "-sdk", sdk, "-module-cache-path", cache, "-file-prefix-map", f"{ROOT}=/src",
-             "-module-name", "InputSelector", "-Xlinker", "-no_adhoc_codesign",
+             "-module-name", "qisme", "-Xlinker", "-no_adhoc_codesign",
              *[p.relative_to(ROOT) for p in sorted((ROOT / "macos/Sources").glob("*.swift"))],
-             "-o", app / "Contents/MacOS/InputSelector"], cwd=ROOT)
+             "-o", app / "Contents/MacOS/qisme"], cwd=ROOT)
         for source, target in (("macos/Info.plist", "Contents/Info.plist"),
                                ("macos/Resources/AppIcon.icns", "Contents/Resources/AppIcon.icns"),
                                ("LICENSE", "Contents/Resources/LICENSE.txt"),
